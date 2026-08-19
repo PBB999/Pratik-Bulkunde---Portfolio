@@ -148,12 +148,16 @@ function getBotResponse(userInput) {
     return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
 }
 
-// Add Message to Chat
+// Add Message to Chat (uses textContent to avoid XSS from user input)
 function addMessage(text, sender) {
     const chatMessages = document.getElementById('chatbotMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${sender}-message`;
-    messageDiv.innerHTML = `<p>${text}</p>`;
+
+    const p = document.createElement('p');
+    p.textContent = text;
+    messageDiv.appendChild(p);
+
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -163,8 +167,12 @@ function addTypingIndicator() {
     const chatMessages = document.getElementById('chatbotMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = 'chat-message bot-message typing-indicator';
-    messageDiv.innerHTML = `<p><span>.</span><span>.</span><span>.</span></p>`;
     messageDiv.id = 'typingIndicator';
+
+    const p = document.createElement('p');
+    p.innerHTML = '<span></span><span></span><span></span>';
+    messageDiv.appendChild(p);
+
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -181,16 +189,17 @@ function removeTypingIndicator() {
 function sendMessage() {
     const chatInput = document.getElementById('chatInput');
     const userMessage = chatInput.value.trim();
-    
+
     if (!userMessage) return;
 
     // Add user message to chat
     addMessage(userMessage, 'user');
     chatInput.value = '';
+    chatInput.focus();
 
     // Get bot response
     const botResponse = getBotResponse(userMessage);
-    
+
     // Add typing indicator
     addTypingIndicator();
 
@@ -201,21 +210,22 @@ function sendMessage() {
     }, 800);
 }
 
-// Add welcome suggestions
+// Add welcome suggestions (renders once, above the input bar)
 function addSuggestedReplies() {
     const chatInput = document.getElementById('chatInput');
-    const parentDiv = chatInput.parentElement;
-    
-    // Check if suggestions already exist
-    if (parentDiv.querySelector('.chatbot-suggestions')) {
+    const inputWrapper = chatInput.closest('.chatbot-input-wrapper') || chatInput.parentElement;
+
+    // Prevent duplicate suggestion bars
+    if (document.querySelector('.chatbot-suggestions')) {
         return;
     }
-    
+
     const suggestionsDiv = document.createElement('div');
     suggestionsDiv.className = 'chatbot-suggestions';
-    
+
     suggestedReplies.forEach(reply => {
         const btn = document.createElement('button');
+        btn.type = 'button';
         btn.textContent = reply;
         btn.className = 'suggestion-btn';
         btn.addEventListener('click', () => {
@@ -224,14 +234,14 @@ function addSuggestedReplies() {
         });
         suggestionsDiv.appendChild(btn);
     });
-    
-    parentDiv.insertBefore(suggestionsDiv, chatInput);
+
+    inputWrapper.parentElement.insertBefore(suggestionsDiv, inputWrapper);
 }
 
 // Initialize chatbot when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('🤖 Chatbot initializing...');
-    
+
     try {
         // Get all chatbot elements
         const chatbotToggle = document.getElementById('chatbotToggle');
@@ -245,8 +255,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Toggle Chatbot
-        chatbotToggle.addEventListener('click', () => {
+        // Toggle Chatbot open/closed
+        chatbotToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
             chatbotContainer.classList.toggle('active');
             if (chatbotContainer.classList.contains('active')) {
                 chatInput.focus();
@@ -254,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Close Chatbot
+        // Close Chatbot via X button
         if (chatbotClose) {
             chatbotClose.addEventListener('click', () => {
                 chatbotContainer.classList.remove('active');
@@ -271,265 +282,50 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
+        // Close chatbot when tapping/clicking outside it (mobile-friendly)
+        document.addEventListener('click', (e) => {
+            if (
+                chatbotContainer.classList.contains('active') &&
+                !chatbotContainer.contains(e.target) &&
+                !chatbotToggle.contains(e.target)
+            ) {
+                chatbotContainer.classList.remove('active');
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && chatbotContainer.classList.contains('active')) {
+                chatbotContainer.classList.remove('active');
+            }
+        });
+
+        // Prevent clicks inside the chatbot from bubbling to the outside-click closer
+        chatbotContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Adjust chat window height on mobile when the on-screen keyboard opens
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                if (chatbotContainer.classList.contains('active') && window.innerWidth <= 480) {
+                    const viewportHeight = window.visualViewport.height;
+                    chatbotContainer.style.maxHeight = `${viewportHeight - 100}px`;
+                }
+            });
+        }
+
         console.log('✅ Chatbot initialized successfully!');
     } catch (error) {
         console.error('❌ Error initializing chatbot:', error);
     }
 });
 
-// Add Typing Animation CSS
-const chatbotStyles = `
-    /* Chatbot Container */
-    .chatbot-container {
-        position: fixed;
-        bottom: 100px;
-        right: 20px;
-        width: 380px;
-        height: 500px;
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 5px 30px rgba(0, 0, 0, 0.2);
-        display: flex;
-        flex-direction: column;
-        transform: translateY(400px);
-        opacity: 0;
-        transition: all 0.3s ease;
-        z-index: 999;
-        overflow: hidden;
-    }
-
-    .chatbot-container.active {
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    .chatbot-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-radius: 15px 15px 0 0;
-    }
-
-    .chatbot-header h3 {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 600;
-    }
-
-    .chatbot-close {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 24px;
-        cursor: pointer;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .chatbot-close:hover {
-        opacity: 0.8;
-    }
-
-    #chatbotMessages {
-        flex: 1;
-        overflow-y: auto;
-        padding: 20px;
-        background: #f5f5f5;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .chat-message {
-        display: flex;
-        word-wrap: break-word;
-        animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .chat-message p {
-        margin: 0;
-        padding: 12px 16px;
-        border-radius: 12px;
-        font-size: 14px;
-        line-height: 1.5;
-        white-space: pre-wrap;
-    }
-
-    .user-message p {
-        background: #667eea;
-        color: white;
-        margin-left: auto;
-        max-width: 85%;
-        border-radius: 12px 2px 12px 12px;
-    }
-
-    .bot-message p {
-        background: white;
-        color: #333;
-        max-width: 85%;
-        border: 1px solid #ddd;
-        border-radius: 2px 12px 12px 12px;
-    }
-
-    .typing-indicator p {
-        display: flex;
-        gap: 4px;
-        background: white;
-        border: 1px solid #ddd;
-    }
-
-    .typing-indicator span {
-        width: 8px;
-        height: 8px;
-        background: #667eea;
-        border-radius: 50%;
-        animation: typing 1.4s infinite;
-    }
-
-    .typing-indicator span:nth-child(2) {
-        animation-delay: 0.2s;
-    }
-
-    .typing-indicator span:nth-child(3) {
-        animation-delay: 0.4s;
-    }
-
-    @keyframes typing {
-        0%, 60%, 100% {
-            opacity: 0.5;
-            transform: translateY(0);
-        }
-        30% {
-            opacity: 1;
-            transform: translateY(-10px);
-        }
-    }
-
-    .chatbot-input {
-        display: flex;
-        gap: 10px;
-        padding: 12px;
-        background: white;
-        border-top: 1px solid #ddd;
-    }
-
-    #chatInput {
-        flex: 1;
-        border: 1px solid #ddd;
-        border-radius: 20px;
-        padding: 10px 15px;
-        font-size: 14px;
-        outline: none;
-        transition: border-color 0.3s ease;
-    }
-
-    #chatInput:focus {
-        border-color: #667eea;
-    }
-
-    #chatSend {
-        background: #667eea;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.3s ease;
-    }
-
-    #chatSend:hover {
-        background: #764ba2;
-    }
-
-    .chatbot-suggestions {
-        padding: 10px;
-        border-top: 1px solid #ddd;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        background: #f9f9f9;
-    }
-
-    .suggestion-btn {
-        padding: 6px 12px;
-        border: 1px solid #667eea;
-        background: transparent;
-        color: #667eea;
-        border-radius: 15px;
-        cursor: pointer;
-        font-size: 12px;
-        transition: all 0.3s ease;
-    }
-
-    .suggestion-btn:hover {
-        background: #667eea;
-        color: white;
-    }
-
-    /* Chatbot Toggle Button */
-    .chatbot-toggle {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        border-radius: 50%;
-        color: white;
-        font-size: 24px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        transition: all 0.3s ease;
-        z-index: 998;
-    }
-
-    .chatbot-toggle:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
-    }
-
-    /* Responsive Design */
-    @media (max-width: 480px) {
-        .chatbot-container {
-            width: calc(100% - 40px);
-            height: 60vh;
-            bottom: 80px;
-            right: 20px;
-            left: 20px;
-        }
-
-        .user-message p,
-        .bot-message p {
-            max-width: 90%;
-        }
-    }
-`;
-
-// Inject styles
-const styleElement = document.createElement('style');
-styleElement.textContent = chatbotStyles;
-document.head.appendChild(styleElement);
+/*
+  NOTE: All chatbot styling now lives in style.css (.chatbot-toggle,
+  .chatbot-container, .chatbot-header, .chatbot-messages, .chat-message,
+  .chatbot-input-wrapper, .chat-input, .chat-send-btn, .chatbot-suggestions,
+  .suggestion-btn). No CSS is injected from this file anymore — keeping
+  styles in one place avoids conflicting/duplicate rules and makes the
+  responsive breakpoints actually take effect.
+*/
