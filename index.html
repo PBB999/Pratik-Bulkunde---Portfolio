@@ -6,6 +6,8 @@
     <title>Pratik Bulkunde - Security Engineer Portfolio</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -45,9 +47,9 @@
         <div class="container">
             <div class="hero-content">
                 <div class="profile-image-container">
-                    <img src="WhatsApp Image 2026-06-30 at 3.37.34 PM.jpeg" alt="Pratik Bulkunde" class="profile-image">
+                    <img src="C:\Users\User\Downloads\Pratik-Portfolio\Pratik-Portfolio\WhatsApp Image 2026-06-30 at 3.37.34 PM.jpeg" alt="Pratik Bulkunde" class="profile-image">
                     <div class="ceh-badge">
-                        <img src="Logo-CEH-300x233.png" alt="CEH Badge" class="ceh-logo">
+                        <img src="C:\Users\User\Downloads\Pratik-Portfolio\Pratik-Portfolio\Logo-CEH-300x233.png" alt="CEH Badge" class="ceh-logo">
                         <!-- <span>CEH</span> -->
                     </div>
                 </div>
@@ -435,28 +437,35 @@
         </div>
     </section>
 
-    <!-- Chatbot Widget -->
-    <div class="chatbot-container">
-        <div class="chatbot-header">
-            <h3>Chat with me <i class="fas fa-robot"></i></h3>
-            <button class="chatbot-close" id="chatbotClose">
-                <i class="fas fa-times"></i>
-            </button>
+  <!-- Chatbot Widget -->
+<div class="chatbot-container">
+    <div class="chatbot-header">
+        <div class="chatbot-titlebar">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
         </div>
-        <div class="chatbot-messages" id="chatbotMessages">
-            <div class="chat-message bot-message">
-                <p>Hi! I'm Pratik's AI Assistant. Ask me anything about his skills, experience, or projects! 👋</p>
-            </div>
-        </div>
-        <div class="chatbot-input">
-            <input type="text" id="chatInput" placeholder="Ask me something...">
-            <button id="chatSend"><i class="fas fa-paper-plane"></i></button>
+        <h3><i class="fas fa-terminal"></i> Pratik@assistant<span class="prompt-blink">:~$</span></h3>
+        <button class="chatbot-close" id="chatbotClose" aria-label="Close chat">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="chatbot-messages" id="chatbotMessages">
+        <div class="chat-message bot-message">
+            <p>Hi! I'm Pratik's AI Assistant. Ask me anything about his skills, experience, or projects! 👋</p>
         </div>
     </div>
+    <div class="chatbot-input-wrapper">
+        <span class="input-prompt">&gt;</span>
+        <input type="text" id="chatInput" class="chat-input" placeholder="type a command..." aria-label="Type your message">
+        <button id="chatSend" class="chat-send-btn" aria-label="Send message"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
 
-    <button class="chatbot-toggle" id="chatbotToggle">
-        <i class="fas fa-comments"></i>
-    </button>
+<button class="chatbot-toggle" id="chatbotToggle" aria-label="Open chat">
+    <i class="fas fa-terminal"></i>
+    <span class="toggle-ping"></span>
+</button>
 
     <!-- Footer -->
     <footer class="footer">
